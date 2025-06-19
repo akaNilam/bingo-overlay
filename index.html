@@ -39,9 +39,6 @@
   <div id="bingo-container"></div>
 
   <script>
-    // ✅ Trage hier deine NGROK-URL ein – mit wss:// vorne!
-    const WEBSOCKET_URL = "wss://WSS_DEINE_NGROK_URL_HIER";
-
     const container = document.getElementById('bingo-container');
 
     const offsetLeft = 80;
@@ -106,7 +103,6 @@
       const cells = container.getElementsByClassName('bingo-cell');
       const cellNumber = parseInt(cellId.replace('bingoCell', ''), 10);
       if (!cellNumber || cellNumber < 1 || cellNumber > cells.length) return;
-
       if (markedCells.has(cellNumber)) return;
 
       const cell = cells[cellNumber - 1];
@@ -145,8 +141,11 @@
 
     window.addEventListener('load', createCells);
     window.addEventListener('resize', createCells);
+  </script>
 
-    // WebSocket verbinden
+  <script>
+    // ✨ WebSocket-Verbindung
+    const WEBSOCKET_URL = "wss://a459-109-193-1-96.ngrok-free.app"; // HIER NGROK URL EINTRAGEN
     const socket = new WebSocket(WEBSOCKET_URL);
 
     socket.addEventListener("message", (event) => {
