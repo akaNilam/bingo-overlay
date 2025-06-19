@@ -5,17 +5,13 @@
   <title>Bingo Overlay</title>
   <style>
     html, body {
-      margin: 0;
-      padding: 0;
+      margin: 0; padding: 0;
       background: black;
-      height: 100vh;
-      width: 100vw;
-      display: flex;
-      justify-content: center;
-      align-items: center;
+      height: 100vh; width: 100vw;
+      display: flex; justify-content: center; align-items: center;
       overflow: hidden;
+      font-family: Arial, sans-serif;
     }
-
     #bingo-container {
       position: relative;
       max-width: 100vw;
@@ -24,22 +20,18 @@
       height: 1920px;
       background: url('bingo.png') no-repeat center/contain;
       user-select: none;
-      font-family: Arial, sans-serif;
     }
-
     .bingo-cell {
       position: absolute;
       color: transparent; /* Zahlen versteckt */
       font-weight: bold;
-      text-shadow: 0 0 4px black;
-      display: flex;
-      justify-content: center;
-      align-items: center;
+      display: flex; justify-content: center; align-items: center;
       border-radius: 6px;
       background-color: rgba(0,0,0,0.4);
       user-select: none;
       pointer-events: none;
       transition: all 0.2s ease;
+      background-image: none;
     }
   </style>
 </head>
@@ -57,20 +49,17 @@
     const totalWidth = 1920;
     const totalHeight = 1920;
 
-    const verticalOffsets = [0, 12, 30, 40, 53, 50];
-    const horizontalOffsets = [0, 4, 1, 0, 1, 0];
+    const markedCells = new Set();
 
     function createCells() {
       container.innerHTML = '';
 
       const containerWidth = container.clientWidth;
       const containerHeight = container.clientHeight;
-
       const imageRatio = totalWidth / totalHeight;
       const containerRatio = containerWidth / containerHeight;
 
-      let displayedWidth, displayedHeight;
-      let paddingX = 0, paddingY = 0;
+      let displayedWidth, displayedHeight, paddingX = 0, paddingY = 0;
 
       if (containerRatio > imageRatio) {
         displayedHeight = containerHeight;
@@ -95,22 +84,61 @@
         for (let col = 0; col < 5; col++) {
           const cell = document.createElement('div');
           cell.classList.add('bingo-cell');
-          cell.textContent = row * 5 + col + 1;
+          cell.textContent = row * 5 + col + 1; 
 
-          const left = offsetLeft + col * cellWidth + verticalOffsets[col];
-          const right = offsetLeft + (col + 1) * cellWidth + verticalOffsets[col + 1];
-          const top = offsetTop + row * cellHeight + horizontalOffsets[row];
-          const bottom = offsetTop + (row + 1) * cellHeight + horizontalOffsets[row + 1];
+          const left = offsetLeft + col * cellWidth;
+          const top = offsetTop + row * cellHeight;
 
           cell.style.left = (left * scaleX + paddingX) + 'px';
           cell.style.top = (top * scaleY + paddingY) + 'px';
-          cell.style.width = ((right - left) * scaleX) + 'px';
-          cell.style.height = ((bottom - top) * scaleY) + 'px';
+          cell.style.width = (cellWidth * scaleX) + 'px';
+          cell.style.height = (cellHeight * scaleY) + 'px';
 
           container.appendChild(cell);
         }
       }
     }
+
+    function markCell(cellId) {
+      const cells = container.getElementsByClassName('bingo-cell');
+      const cellNumber = parseInt(cellId.replace('bingoCell', ''), 10);
+      if (!cellNumber || cellNumber < 1 || cellNumber > cells.length) return;
+
+      if (markedCells.has(cellNumber)) return;
+
+      const cell = cells[cellNumber - 1];
+      if (!cell) return;
+
+      cell.style.backgroundImage = "url('x.png')";
+      cell.style.backgroundSize = "contain";
+      cell.style.backgroundRepeat = "no-repeat";
+      cell.style.backgroundPosition = "center";
+
+      markedCells.add(cellNumber);
+    }
+
+    function resetMarks() {
+      const cells = container.getElementsByClassName('bingo-cell');
+      markedCells.clear();
+      for (let cell of cells) {
+        cell.style.backgroundImage = 'none';
+      }
+    }
+
+    window.addEventListener('message', (event) => {
+      if (event.origin !== 'https://tikfinity.zerody.one') return;
+
+      const data = event.data;
+
+      if (data.type === 'gift' && typeof data.feldId === 'string') {
+        markCell(data.feldId);
+      }
+
+      if (data.type === 'resetBingo') {
+        resetMarks();
+        console.log('Bingo Overlay: Markierungen automatisch zurückgesetzt.');
+      }
+    });
 
     window.addEventListener('load', createCells);
     window.addEventListener('resize', createCells);
