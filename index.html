@@ -111,7 +111,9 @@
 
     window.addEventListener('message', (event) => {
       console.log('[MESSAGE]', event.data);
-      if (event.origin !== 'https://tikfinity.zerody.one') return;
+      // if (event.origin !== 'https://tikfinity.zerody.one') return;  // AUSKOMMENTIERT zum Test
+      if (!event.origin) return; // Alternative Sicherung
+
       const data = event.data;
       if (data.type === 'gift' && typeof data.feldId === 'string') {
         console.log('[MARK CELL]', data.feldId);
