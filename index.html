@@ -143,5 +143,23 @@
     window.addEventListener('load', createCells);
     window.addEventListener('resize', createCells);
   </script>
+<script>
+  const socket = new WebSocket("wss://DEINE-NGROK-URL-HIER");
+
+  socket.addEventListener("message", (event) => {
+    try {
+      const data = JSON.parse(event.data);
+      if (data.type === 'gift' && data.feldId) {
+        window.postMessage({ type: "gift", feldId: data.feldId }, "*");
+      }
+      if (data.type === 'resetBingo') {
+        window.postMessage({ type: "resetBingo" }, "*");
+      }
+    } catch (e) {
+      console.error("Fehler beim Parsen der Nachricht:", e);
+    }
+  });
+</script>
+
 </body>
 </html>
