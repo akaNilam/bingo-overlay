@@ -23,7 +23,7 @@
     }
     .bingo-cell {
       position: absolute;
-      color: transparent; /* Zahlen versteckt */
+      color: transparent;
       font-weight: bold;
       display: flex; justify-content: center; align-items: center;
       border-radius: 6px;
@@ -39,6 +39,9 @@
   <div id="bingo-container"></div>
 
   <script>
+    // ✅ Trage hier deine NGROK-URL ein – mit wss:// vorne!
+    const WEBSOCKET_URL = "wss://WSS_DEINE_NGROK_URL_HIER";
+
     const container = document.getElementById('bingo-container');
 
     const offsetLeft = 80;
@@ -84,7 +87,7 @@
         for (let col = 0; col < 5; col++) {
           const cell = document.createElement('div');
           cell.classList.add('bingo-cell');
-          cell.textContent = row * 5 + col + 1; 
+          cell.textContent = row * 5 + col + 1;
 
           const left = offsetLeft + col * cellWidth;
           const top = offsetTop + row * cellHeight;
@@ -142,24 +145,35 @@
 
     window.addEventListener('load', createCells);
     window.addEventListener('resize', createCells);
+
+    // WebSocket verbinden
+    const socket = new WebSocket(WEBSOCKET_URL);
+
+    socket.addEventListener("message", (event) => {
+      try {
+        const data = JSON.parse(event.data);
+        if (data.type === 'gift' && data.feldId) {
+          window.postMessage({ type: "gift", feldId: data.feldId }, "*");
+        }
+        if (data.type === 'resetBingo') {
+          window.postMessage({ type: "resetBingo" }, "*");
+        }
+      } catch (e) {
+        console.error("Fehler beim Parsen der Nachricht:", e);
+      }
+    });
+
+    socket.addEventListener("open", () => {
+      console.log("WebSocket verbunden");
+    });
+
+    socket.addEventListener("close", () => {
+      console.warn("WebSocket getrennt");
+    });
+
+    socket.addEventListener("error", (e) => {
+      console.error("WebSocket-Fehler:", e);
+    });
   </script>
-<script>
-  const socket = new WebSocket("wss://4ff0-109-193-1-96.ngrok-free.app");
-
-  socket.addEventListener("message", (event) => {
-    try {
-      const data = JSON.parse(event.data);
-      if (data.type === 'gift' && data.feldId) {
-        window.postMessage({ type: "gift", feldId: data.feldId }, "*");
-      }
-      if (data.type === 'resetBingo') {
-        window.postMessage({ type: "resetBingo" }, "*");
-      }
-    } catch (e) {
-      console.error("Fehler beim Parsen der Nachricht:", e);
-    }
-  });
-</script>
-
 </body>
 </html>
