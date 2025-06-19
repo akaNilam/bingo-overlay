@@ -39,6 +39,7 @@
       background-color: rgba(0,0,0,0.4);
       user-select: none;
       pointer-events: none;
+      transition: all 0.2s ease;
     }
   </style>
 </head>
@@ -48,42 +49,64 @@
   <script>
     const container = document.getElementById('bingo-container');
 
+    // Rahmen Offsets (grün)
     const offsetLeft = 80;
     const offsetTop = 545;
     const offsetRight = 71;
     const offsetBottom = 132;
 
+    // Ursprüngliche Bildgröße
     const totalWidth = 1920;
     const totalHeight = 1920;
 
-    const usableWidth = totalWidth - offsetLeft - offsetRight;
-    const usableHeight = totalHeight - offsetTop - offsetBottom;
-
-    const cellWidth = usableWidth / 5;
-    const cellHeight = usableHeight / 5;
-
+    // Gelbe Linien-Offsets (zusätzliche pixelgenaue Verschiebungen)
     const verticalOffsets = [0, 12, 30, 40, 53, 50];
     const horizontalOffsets = [0, 4, 1, 0, 1, 0];
 
-    for (let row = 0; row < 5; row++) {
-      for (let col = 0; col < 5; col++) {
-        const cell = document.createElement('div');
-        cell.classList.add('bingo-cell');
-        cell.textContent = row * 5 + col + 1;
+    // Funktion um Zellen zu erzeugen und zu positionieren
+    function createCells() {
+      // Zellen entfernen, falls schon vorhanden
+      container.innerHTML = '';
 
-        const left = offsetLeft + col * cellWidth + verticalOffsets[col];
-        const right = offsetLeft + (col + 1) * cellWidth + verticalOffsets[col + 1];
-        const top = offsetTop + row * cellHeight + horizontalOffsets[row];
-        const bottom = offsetTop + (row + 1) * cellHeight + horizontalOffsets[row + 1];
+      const currentWidth = container.clientWidth;
+      const currentHeight = container.clientHeight;
 
-        cell.style.left = left + 'px';
-        cell.style.top = top + 'px';
-        cell.style.width = (right - left) + 'px';
-        cell.style.height = (bottom - top) + 'px';
+      // Skalierungsfaktoren
+      const scaleX = currentWidth / totalWidth;
+      const scaleY = currentHeight / totalHeight;
 
-        container.appendChild(cell);
+      // Nutzbare Breite/Höhe (ohne Ränder)
+      const usableWidth = totalWidth - offsetLeft - offsetRight;
+      const usableHeight = totalHeight - offsetTop - offsetBottom;
+
+      const cellWidth = usableWidth / 5;
+      const cellHeight = usableHeight / 5;
+
+      for (let row = 0; row < 5; row++) {
+        for (let col = 0; col < 5; col++) {
+          const cell = document.createElement('div');
+          cell.classList.add('bingo-cell');
+          cell.textContent = row * 5 + col + 1;
+
+          const left = offsetLeft + col * cellWidth + verticalOffsets[col];
+          const right = offsetLeft + (col + 1) * cellWidth + verticalOffsets[col + 1];
+          const top = offsetTop + row * cellHeight + horizontalOffsets[row];
+          const bottom = offsetTop + (row + 1) * cellHeight + horizontalOffsets[row + 1];
+
+          // Position und Größe mit Skalierung setzen
+          cell.style.left = (left * scaleX) + 'px';
+          cell.style.top = (top * scaleY) + 'px';
+          cell.style.width = ((right - left) * scaleX) + 'px';
+          cell.style.height = ((bottom - top) * scaleY) + 'px';
+
+          container.appendChild(cell);
+        }
       }
     }
+
+    // Beim Laden der Seite und beim Fenster-Resize die Zellen anpassen
+    window.addEventListener('load', createCells);
+    window.addEventListener('resize', createCells);
   </script>
 </body>
 </html>
