@@ -49,33 +49,47 @@
   <script>
     const container = document.getElementById('bingo-container');
 
-    // Rahmen Offsets (grün)
+    // Offsets (grün)
     const offsetLeft = 80;
     const offsetTop = 545;
     const offsetRight = 71;
     const offsetBottom = 132;
 
-    // Ursprüngliche Bildgröße
     const totalWidth = 1920;
     const totalHeight = 1920;
 
-    // Gelbe Linien-Offsets (zusätzliche pixelgenaue Verschiebungen)
     const verticalOffsets = [0, 12, 30, 40, 53, 50];
     const horizontalOffsets = [0, 4, 1, 0, 1, 0];
 
-    // Funktion um Zellen zu erzeugen und zu positionieren
     function createCells() {
-      // Zellen entfernen, falls schon vorhanden
       container.innerHTML = '';
 
-      const currentWidth = container.clientWidth;
-      const currentHeight = container.clientHeight;
+      const containerWidth = container.clientWidth;
+      const containerHeight = container.clientHeight;
 
-      // Skalierungsfaktoren
-      const scaleX = currentWidth / totalWidth;
-      const scaleY = currentHeight / totalHeight;
+      // Bildseitenverhältnis (breite / höhe)
+      const imageRatio = totalWidth / totalHeight;
+      const containerRatio = containerWidth / containerHeight;
 
-      // Nutzbare Breite/Höhe (ohne Ränder)
+      // Berechne sichtbare Bildgröße und Padding
+      let displayedWidth, displayedHeight;
+      let paddingX = 0, paddingY = 0;
+
+      if (containerRatio > imageRatio) {
+        // Container ist breiter als Bild -> Padding links/rechts
+        displayedHeight = containerHeight;
+        displayedWidth = displayedHeight * imageRatio;
+        paddingX = (containerWidth - displayedWidth) / 2;
+      } else {
+        // Container ist schmaler oder gleich -> Padding oben/unten
+        displayedWidth = containerWidth;
+        displayedHeight = displayedWidth / imageRatio;
+        paddingY = (containerHeight - displayedHeight) / 2;
+      }
+
+      const scaleX = displayedWidth / totalWidth;
+      const scaleY = displayedHeight / totalHeight;
+
       const usableWidth = totalWidth - offsetLeft - offsetRight;
       const usableHeight = totalHeight - offsetTop - offsetBottom;
 
@@ -93,9 +107,8 @@
           const top = offsetTop + row * cellHeight + horizontalOffsets[row];
           const bottom = offsetTop + (row + 1) * cellHeight + horizontalOffsets[row + 1];
 
-          // Position und Größe mit Skalierung setzen
-          cell.style.left = (left * scaleX) + 'px';
-          cell.style.top = (top * scaleY) + 'px';
+          cell.style.left = (left * scaleX + paddingX) + 'px';
+          cell.style.top = (top * scaleY + paddingY) + 'px';
           cell.style.width = ((right - left) * scaleX) + 'px';
           cell.style.height = ((bottom - top) * scaleY) + 'px';
 
@@ -104,7 +117,6 @@
       }
     }
 
-    // Beim Laden der Seite und beim Fenster-Resize die Zellen anpassen
     window.addEventListener('load', createCells);
     window.addEventListener('resize', createCells);
   </script>
