@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
   <meta charset="UTF-8" />
-  <title>Bingo Overlay</title>
+  <title>Bingo Overlay Debug</title>
   <style>
     html, body {
       margin: 0; padding: 0;
@@ -40,25 +40,16 @@
 
   <script>
     const container = document.getElementById('bingo-container');
-
-    const offsetLeft = 80;
-    const offsetTop = 545;
-    const offsetRight = 71;
-    const offsetBottom = 132;
-
-    const totalWidth = 1920;
-    const totalHeight = 1920;
-
+    const offsetLeft = 80, offsetTop = 545, offsetRight = 71, offsetBottom = 132;
+    const totalWidth = 1920, totalHeight = 1920;
     const markedCells = new Set();
 
     function createCells() {
       container.innerHTML = '';
-
       const containerWidth = container.clientWidth;
       const containerHeight = container.clientHeight;
       const imageRatio = totalWidth / totalHeight;
       const containerRatio = containerWidth / containerHeight;
-
       let displayedWidth, displayedHeight, paddingX = 0, paddingY = 0;
 
       if (containerRatio > imageRatio) {
@@ -73,12 +64,8 @@
 
       const scaleX = displayedWidth / totalWidth;
       const scaleY = displayedHeight / totalHeight;
-
-      const usableWidth = totalWidth - offsetLeft - offsetRight;
-      const usableHeight = totalHeight - offsetTop - offsetBottom;
-
-      const cellWidth = usableWidth / 5;
-      const cellHeight = usableHeight / 5;
+      const cellWidth = (totalWidth - offsetLeft - offsetRight) / 5;
+      const cellHeight = (totalHeight - offsetTop - offsetBottom) / 5;
 
       for (let row = 0; row < 5; row++) {
         for (let col = 0; col < 5; col++) {
@@ -104,7 +91,6 @@
       const cellNumber = parseInt(cellId.replace('bingoCell', ''), 10);
       if (!cellNumber || cellNumber < 1 || cellNumber > cells.length) return;
       if (markedCells.has(cellNumber)) return;
-
       const cell = cells[cellNumber - 1];
       if (!cell) return;
 
@@ -112,7 +98,6 @@
       cell.style.backgroundSize = "contain";
       cell.style.backgroundRepeat = "no-repeat";
       cell.style.backgroundPosition = "center";
-
       markedCells.add(cellNumber);
     }
 
@@ -125,17 +110,16 @@
     }
 
     window.addEventListener('message', (event) => {
+      console.log('[MESSAGE]', event.data);
       if (event.origin !== 'https://tikfinity.zerody.one') return;
-
       const data = event.data;
-
       if (data.type === 'gift' && typeof data.feldId === 'string') {
+        console.log('[MARK CELL]', data.feldId);
         markCell(data.feldId);
       }
-
       if (data.type === 'resetBingo') {
+        console.log('[RESET]');
         resetMarks();
-        console.log('Bingo Overlay: Markierungen automatisch zurückgesetzt.');
       }
     });
 
@@ -144,11 +128,11 @@
   </script>
 
   <script>
-    // ✨ WebSocket-Verbindung
-    const WEBSOCKET_URL = "wss://2e16-109-193-1-96.ngrok-free.app"; // HIER NGROK URL EINTRAGEN
+    const WEBSOCKET_URL = "wss://2e16-109-193-1-96.ngrok-free.app"; // NGROK WS-LINK
     const socket = new WebSocket(WEBSOCKET_URL);
 
     socket.addEventListener("message", (event) => {
+      console.log('[WS MESSAGE]', event.data);
       try {
         const data = JSON.parse(event.data);
         if (data.type === 'gift' && data.feldId) {
@@ -158,21 +142,13 @@
           window.postMessage({ type: "resetBingo" }, "*");
         }
       } catch (e) {
-        console.error("Fehler beim Parsen der Nachricht:", e);
+        console.error("[WS PARSE ERROR]", e);
       }
     });
 
-    socket.addEventListener("open", () => {
-      console.log("WebSocket verbunden");
-    });
-
-    socket.addEventListener("close", () => {
-      console.warn("WebSocket getrennt");
-    });
-
-    socket.addEventListener("error", (e) => {
-      console.error("WebSocket-Fehler:", e);
-    });
+    socket.addEventListener("open", () => console.log("[WS OPEN] verbunden"));
+    socket.addEventListener("close", () => console.warn("[WS CLOSED] getrennt"));
+    socket.addEventListener("error", e => console.error("[WS ERROR]", e));
   </script>
 </body>
 </html>
