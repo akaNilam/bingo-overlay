@@ -33,3 +33,12 @@ app.post("/ngrok-webhook", (req, res) => {
 http.listen(PORT, () => {
   console.log(`✅ Server läuft auf Port ${PORT}`);
 });
+setInterval(() => {
+  const payload = JSON.stringify({ type: 'ping' });
+  clients.forEach(ws => {
+    if (ws.readyState === WebSocket.OPEN) {
+      ws.send(payload);
+    }
+  });
+  console.log("[SERVER] Ping gesendet an alle Clients");
+}, 10 * 60 * 1000); // alle 10 Minuten
