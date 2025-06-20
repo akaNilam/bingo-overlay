@@ -1,4 +1,4 @@
-// ✅ Finaler Code für deinen server.js auf Render (komplett ersetzt)
+// ✅ Finaler Code für deinen server.js auf Render (inkl. KeepAlive-Route)
 const express = require("express");
 const app = express();
 const http = require("http").createServer(app);
@@ -27,6 +27,11 @@ app.post("/ngrok-webhook", (req, res) => {
   });
 
   res.status(200).send("OK");
+});
+
+// 🟢 KeepAlive-Route für Render-Homepage
+app.get("/", (req, res) => {
+  res.send("✅ Der Bingo-Overlay-Server läuft.");
 });
 
 // Starte Server
