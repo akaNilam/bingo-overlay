@@ -103,20 +103,24 @@
 
     function resetMarks() {
       const cells = container.getElementsByClassName('bingo-cell');
-      markedCells = new Set();
       for (let cell of cells) {
         cell.style.backgroundImage = 'none';
       }
+      markedCells.clear();
     }
 
     window.addEventListener('message', (event) => {
-      if (!event.origin && typeof event.data === 'object') {
+      try {
         const data = event.data;
-        if (data.type === 'gift' && typeof data.feldId === 'string') {
-          markCell(data.feldId);
-        } else if (data.type === 'resetBingo') {
-          resetMarks();
+        if (typeof data === 'object' && data.type) {
+          if (data.type === 'gift' && typeof data.feldId === 'string') {
+            markCell(data.feldId);
+          } else if (data.type === 'resetBingo') {
+            resetMarks();
+          }
         }
+      } catch (e) {
+        console.error('[POSTMESSAGE ERROR]', e);
       }
     });
 
@@ -126,10 +130,9 @@
 
   <script>
     const WEBSOCKET_URL = "wss://bingo-overlay.onrender.com/ws";
-    let socket;
 
     function connectWebSocket() {
-      socket = new WebSocket(WEBSOCKET_URL);
+      const socket = new WebSocket(WEBSOCKET_URL);
 
       socket.addEventListener("open", () => console.log("[WS OPEN] verbunden"));
 
