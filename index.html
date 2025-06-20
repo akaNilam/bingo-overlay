@@ -94,7 +94,6 @@
       const cell = cells[cellNumber - 1];
       if (!cell) return;
 
-      // Hier die absolute URL zum X-Bild
       cell.style.backgroundImage = "url('https://raw.githubusercontent.com/akaNilam/bingo-overlay/main/x.png')";
       cell.style.backgroundSize = "contain";
       cell.style.backgroundRepeat = "no-repeat";
@@ -112,8 +111,7 @@
 
     window.addEventListener('message', (event) => {
       console.log('[MESSAGE]', event.data);
-      // if (event.origin !== 'https://tikfinity.zerody.one') return;  // AUSKOMMENTIERT zum Test
-      if (!event.origin) return; // Alternative Sicherung
+      if (!event.origin) return;
 
       const data = event.data;
       if (data.type === 'gift' && typeof data.feldId === 'string') {
@@ -138,6 +136,7 @@
       console.log('[WS MESSAGE]', event.data);
       try {
         const data = JSON.parse(event.data);
+        if (data.type === 'ping') return; // 🟢 Ignoriere Ping
         if (data.type === 'gift' && data.feldId) {
           window.postMessage({ type: "gift", feldId: data.feldId }, "*");
         }
@@ -150,7 +149,10 @@
     });
 
     socket.addEventListener("open", () => console.log("[WS OPEN] verbunden"));
-    socket.addEventListener("close", () => console.warn("[WS CLOSED] getrennt"));
+    socket.addEventListener("close", () => {
+      console.warn("[WS CLOSED] getrennt");
+      setTimeout(() => location.reload(), 2000); // 🔁 Reload nach 2 Sek.
+    });
     socket.addEventListener("error", e => console.error("[WS ERROR]", e));
   </script>
 </body>
