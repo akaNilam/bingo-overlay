@@ -1,4 +1,4 @@
-// ✅ Finaler Code für deinen server.js auf Render (komplett ersetzen)
+// ✅ Finaler Code für deinen server.js auf Render (komplett ersetzt)
 const express = require("express");
 const app = express();
 const http = require("http").createServer(app);
@@ -33,12 +33,14 @@ app.post("/ngrok-webhook", (req, res) => {
 http.listen(PORT, () => {
   console.log(`✅ Server läuft auf Port ${PORT}`);
 });
+
+// 🔁 Ping alle 10 Minuten, damit Render nicht einschläft
 setInterval(() => {
   const payload = JSON.stringify({ type: 'ping' });
-  clients.forEach(ws => {
+  wss.clients.forEach(ws => {
     if (ws.readyState === WebSocket.OPEN) {
       ws.send(payload);
     }
   });
   console.log("[SERVER] Ping gesendet an alle Clients");
-}, 10 * 60 * 1000); // alle 10 Minuten
+}, 10 * 60 * 1000);
