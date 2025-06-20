@@ -111,8 +111,8 @@
 
     window.addEventListener('message', (event) => {
       try {
-        const data = event.data;
-        if (typeof data === 'object' && data.type) {
+        const data = typeof event.data === 'string' ? JSON.parse(event.data) : event.data;
+        if (data && typeof data === 'object' && data.type) {
           if (data.type === 'gift' && typeof data.feldId === 'string') {
             markCell(data.feldId);
           } else if (data.type === 'resetBingo') {
