@@ -42,7 +42,7 @@
     const container = document.getElementById('bingo-container');
     const offsetLeft = 80, offsetTop = 545, offsetRight = 71, offsetBottom = 132;
     const totalWidth = 1920, totalHeight = 1920;
-    const markedCells = new Set();
+    let markedCells = new Set();
 
     function createCells() {
       container.innerHTML = '';
@@ -103,7 +103,7 @@
 
     function resetMarks() {
       const cells = container.getElementsByClassName('bingo-cell');
-      markedCells.clear();
+      markedCells = new Set();
       for (let cell of cells) {
         cell.style.backgroundImage = 'none';
       }
@@ -136,7 +136,7 @@
       socket.addEventListener("message", (event) => {
         try {
           const data = JSON.parse(event.data);
-          if (data.type === 'ping') return; // Ignoriere Ping
+          if (data.type === 'ping') return;
           if (data.type === 'gift' && data.feldId) {
             window.postMessage({ type: "gift", feldId: data.feldId }, "*");
           } else if (data.type === 'resetBingo') {
@@ -149,7 +149,7 @@
 
       socket.addEventListener("close", () => {
         console.warn("[WS CLOSED] getrennt");
-        setTimeout(() => location.reload(), 1000); // Auto-Reload nach Trennung
+        setTimeout(() => location.reload(), 1000);
       });
 
       socket.addEventListener("error", e => console.error("[WS ERROR]", e));
