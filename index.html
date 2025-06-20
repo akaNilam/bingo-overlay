@@ -107,7 +107,6 @@
       for (let cell of cells) {
         cell.style.backgroundImage = 'none';
       }
-      console.log("[RESET] alle X entfernt");
     }
 
     window.addEventListener('message', (event) => {
@@ -115,12 +114,14 @@
       if (!event.origin) return;
 
       const data = event.data;
+      if (data.type === 'ping') return; // Ping ignorieren
+
       if (data.type === 'gift' && typeof data.feldId === 'string') {
         console.log('[MARK CELL]', data.feldId);
         markCell(data.feldId);
       }
       if (data.type === 'resetBingo') {
-        console.log('[RESET via postMessage]');
+        console.log('[RESET]');
         resetMarks();
       }
     });
@@ -131,41 +132,38 @@
 
   <script>
     const WEBSOCKET_URL = "wss://bingo-overlay.onrender.com/ws";
-    const socket = new WebSocket(WEBSOCKET_URL);
+    let socket;
 
-    socket.addEventListener("message", (event) => {
-      console.log('[WS MESSAGE]', event.data);
-      try {
-        const data = JSON.parse(event.data);
+    function setupSocket() {
+      socket = new WebSocket(WEBSOCKET_URL);
 
-        if (data.type === 'gift' && data.feldId) {
-          window.postMessage({ type: "gift", feldId: data.feldId }, "*");
+      socket.addEventListener("message", (event) => {
+        console.log('[WS MESSAGE]', event.data);
+        try {
+          const data = JSON.parse(event.data);
+          if (data.type === 'gift' && data.feldId) {
+            window.postMessage({ type: "gift", feldId: data.feldId }, "*");
+          }
+          if (data.type === 'resetBingo') {
+            window.postMessage({ type: "resetBingo" }, "*");
+          }
+        } catch (e) {
+          console.error("[WS PARSE ERROR]", e);
         }
+      });
 
-        if (data.type === 'resetBingo') {
-          console.log('[RESET WS] direkt ausgelöst');
-          resetMarks(); // Direkt im Overlay ausführen!
-        }
+      socket.addEventListener("open", () => console.log("[WS OPEN] verbunden"));
+      socket.addEventListener("close", () => {
+        console.warn("[WS CLOSED] getrennt");
+        setTimeout(() => {
+          console.log("[WS RECONNECT] versuche Verbindung neu...");
+          location.reload();
+        }, 1000);
+      });
+      socket.addEventListener("error", e => console.error("[WS ERROR]", e));
+    }
 
-        if (data.type === 'ping') {
-          console.log('[WS PING] ignoriert');
-        }
-
-      } catch (e) {
-        console.error("[WS PARSE ERROR]", e);
-      }
-    });
-
-    socket.addEventListener("open", () => {
-      console.log("[WS OPEN] verbunden");
-    });
-
-    socket.addEventListener("close", () => {
-      console.warn("[WS CLOSED] getrennt → Seite neu laden");
-      location.reload(); // Auto-Reload bei Disconnect
-    });
-
-    socket.addEventListener("error", e => console.error("[WS ERROR]", e));
+    setupSocket();
   </script>
 </body>
 </html>
