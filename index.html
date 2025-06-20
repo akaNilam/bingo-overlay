@@ -132,28 +132,42 @@
     const WEBSOCKET_URL = "wss://bingo-overlay.onrender.com/ws";
     const socket = new WebSocket(WEBSOCKET_URL);
 
+    socket.addEventListener("open", () => {
+      console.log("[WS OPEN] verbunden");
+    });
+
     socket.addEventListener("message", (event) => {
       console.log('[WS MESSAGE]', event.data);
       try {
         const data = JSON.parse(event.data);
-        if (data.type === 'ping') return; // 🟢 Ignoriere Ping
+
+        // 🟡 PING ignorieren (nicht anzeigen, nicht posten)
+        if (data.type === 'ping') {
+          console.log('[WS] Ping empfangen (ignoriert)');
+          return;
+        }
+
         if (data.type === 'gift' && data.feldId) {
           window.postMessage({ type: "gift", feldId: data.feldId }, "*");
         }
+
         if (data.type === 'resetBingo') {
+          console.log('[WS] Reset-Befehl empfangen');
           window.postMessage({ type: "resetBingo" }, "*");
         }
+
       } catch (e) {
         console.error("[WS PARSE ERROR]", e);
       }
     });
 
-    socket.addEventListener("open", () => console.log("[WS OPEN] verbunden"));
     socket.addEventListener("close", () => {
       console.warn("[WS CLOSED] getrennt");
-      setTimeout(() => location.reload(), 2000); // 🔁 Reload nach 2 Sek.
     });
-    socket.addEventListener("error", e => console.error("[WS ERROR]", e));
+
+    socket.addEventListener("error", (e) => {
+      console.error("[WS ERROR]", e);
+    });
   </script>
 </body>
 </html>
