@@ -86,6 +86,10 @@
       }
     }
 
+    function updateStorage() {
+      localStorage.setItem('bingoMarks', JSON.stringify([...markedCells]));
+    }
+
     function markCell(cellId) {
       const cells = container.getElementsByClassName('bingo-cell');
       const cellNumber = parseInt(cellId.replace('bingoCell', ''), 10);
@@ -99,14 +103,33 @@
       cell.style.backgroundRepeat = "no-repeat";
       cell.style.backgroundPosition = "center";
       markedCells.add(cellNumber);
+      updateStorage();
     }
 
     function resetMarks() {
       const cells = container.getElementsByClassName('bingo-cell');
+      markedCells.clear();
       for (let cell of cells) {
         cell.style.backgroundImage = 'none';
       }
-      markedCells.clear();
+      localStorage.removeItem('bingoMarks');
+    }
+
+    function restoreMarks() {
+      const saved = localStorage.getItem('bingoMarks');
+      if (saved) {
+        try {
+          const nums = JSON.parse(saved);
+          if (Array.isArray(nums)) {
+            nums.forEach(num => {
+              const id = 'bingoCell' + num;
+              markCell(id);
+            });
+          }
+        } catch (e) {
+          console.error('[RESTORE ERROR]', e);
+        }
+      }
     }
 
     window.addEventListener('message', (event) => {
@@ -124,7 +147,11 @@
       }
     });
 
-    window.addEventListener('load', createCells);
+    window.addEventListener('load', () => {
+      createCells();
+      restoreMarks();
+    });
+
     window.addEventListener('resize', createCells);
   </script>
 
