@@ -1,35 +1,35 @@
+// ✅ Finaler Code für deinen server.js auf Render (komplett ersetzen)
 const express = require("express");
-const http = require("http");
+const app = express();
+const http = require("http").createServer(app);
 const WebSocket = require("ws");
 
-const app = express();
-const server = http.createServer(app);
-const wss = new WebSocket.Server({ server, path: "/ws" });
-
-wss.on("connection", (ws) => {
-  console.log("✅ WebSocket verbunden");
-
-  ws.on("close", () => console.log("❌ WebSocket getrennt"));
-});
+const PORT = process.env.PORT || 10000;
+const wss = new WebSocket.Server({ server: http });
 
 app.use(express.json());
 
-app.post("/ngrok-webhook", (req, res) => {
-  const { fieldId } = req.body;
-
-  if (fieldId) {
-    console.log("📩 TikFinity POST:", fieldId);
-    const message = JSON.stringify({ type: "gift", feldId: fieldId });
-    wss.clients.forEach((client) => {
-      if (client.readyState === WebSocket.OPEN) {
-        client.send(message);
-      }
-    });
-  }
-
-  res.sendStatus(200);
+// WebSocket-Verbindung
+wss.on("connection", (ws) => {
+  console.log("Client verbunden");
 });
 
-const PORT = process.env.PORT || 10000;
-server.listen(PORT, () => console.log(`🌐 Server läuft auf Port ${PORT}`));
+// Webhook-Empfang von TikFinity
+app.post("/ngrok-webhook", (req, res) => {
+  const feldId = req.query.fieldId;
+  console.log("Webhook erhalten:", feldId);
 
+  const payload = JSON.stringify({ type: "gift", feldId });
+  wss.clients.forEach((client) => {
+    if (client.readyState === WebSocket.OPEN) {
+      client.send(payload);
+    }
+  });
+
+  res.status(200).send("OK");
+});
+
+// Starte Server
+http.listen(PORT, () => {
+  console.log(`✅ Server läuft auf Port ${PORT}`);
+});
