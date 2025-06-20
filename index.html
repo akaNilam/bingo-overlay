@@ -110,19 +110,13 @@
     }
 
     window.addEventListener('message', (event) => {
-      console.log('[MESSAGE]', event.data);
-      if (!event.origin) return;
-
-      const data = event.data;
-      if (data.type === 'ping') return; // Ping ignorieren
-
-      if (data.type === 'gift' && typeof data.feldId === 'string') {
-        console.log('[MARK CELL]', data.feldId);
-        markCell(data.feldId);
-      }
-      if (data.type === 'resetBingo') {
-        console.log('[RESET]');
-        resetMarks();
+      if (!event.origin && typeof event.data === 'object') {
+        const data = event.data;
+        if (data.type === 'gift' && typeof data.feldId === 'string') {
+          markCell(data.feldId);
+        } else if (data.type === 'resetBingo') {
+          resetMarks();
+        }
       }
     });
 
@@ -134,17 +128,18 @@
     const WEBSOCKET_URL = "wss://bingo-overlay.onrender.com/ws";
     let socket;
 
-    function setupSocket() {
+    function connectWebSocket() {
       socket = new WebSocket(WEBSOCKET_URL);
 
+      socket.addEventListener("open", () => console.log("[WS OPEN] verbunden"));
+
       socket.addEventListener("message", (event) => {
-        console.log('[WS MESSAGE]', event.data);
         try {
           const data = JSON.parse(event.data);
+          if (data.type === 'ping') return; // Ignoriere Ping
           if (data.type === 'gift' && data.feldId) {
             window.postMessage({ type: "gift", feldId: data.feldId }, "*");
-          }
-          if (data.type === 'resetBingo') {
+          } else if (data.type === 'resetBingo') {
             window.postMessage({ type: "resetBingo" }, "*");
           }
         } catch (e) {
@@ -152,18 +147,15 @@
         }
       });
 
-      socket.addEventListener("open", () => console.log("[WS OPEN] verbunden"));
       socket.addEventListener("close", () => {
         console.warn("[WS CLOSED] getrennt");
-        setTimeout(() => {
-          console.log("[WS RECONNECT] versuche Verbindung neu...");
-          location.reload();
-        }, 1000);
+        setTimeout(() => location.reload(), 1000); // Auto-Reload nach Trennung
       });
+
       socket.addEventListener("error", e => console.error("[WS ERROR]", e));
     }
 
-    setupSocket();
+    connectWebSocket();
   </script>
 </body>
 </html>
